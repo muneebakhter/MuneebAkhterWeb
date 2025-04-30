@@ -1,0 +1,46 @@
+trigger:
+- main
+
+pool:
+  name: Development
+
+stages:
+
+- stage: Build
+  jobs:
+  - job: build
+    displayName: Build Web App
+    steps:
+    
+    - task: NuGetToolInstaller@1
+      displayName: Install NuGet 6.x
+      
+    - task: NuGetCommand@2
+      displayName: NuGet restore
+      inputs:
+        restoreSolution: '**/*.sln'
+        feedsToUse: config
+
+    - task: UseDotNet@2
+      displayName: Install .NET SDK
+      inputs:
+        packageType: 'sdk'
+        version: '9.0.x'
+        includePreviewVersions: true
+
+    - script: |
+        dotnet publish -c Release -o "$(Build.ArtifactStagingDirectory)/frontend"
+      displayName: Build Blazor Front-end
+      workingDirectory: $(System.DefaultWorkingDirectory)/Client
+
+    - script: |
+        dotnet publish -c Release -o "$(Build.ArtifactStagingDirectory)/api"
+      displayName: Build Azure Functions API
+      workingDirectory: $(System.DefaultWorkingDirectory)/Api
+
+    - task: PublishBuildArtifacts@1
+      displayName: Publish artifacts
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'

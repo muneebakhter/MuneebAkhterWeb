@@ -1,0 +1,151 @@
+trigger:
+- main
+
+variables:
+  staticWebAppName:  MuneebAkhterWeb
+  resourceGroup:     MuneebAkhter
+  azureServiceConnection: MuneebAkhterRGConn
+
+pool:
+  name: Development
+
+stages:
+- stage: Build
+  jobs:
+  - job: build
+    displayName: Build Web App
+    steps:
+    - task: NuGetToolInstaller@1
+      displayName: Install NuGet 6.x
+
+    - task: NuGetCommand@2
+      displayName: NuGet restore
+      inputs:
+        restoreSolution: '**/*.sln'
+        feedsToUse: config
+
+    - task: UseDotNet@2
+      displayName: Install .NET SDK 9 Preview
+      inputs:
+        packageType: sdk
+        version: 9.0.x
+        includePreviewVersions: true
+
+    - script: dotnet publish -c Release -o "$(Build.ArtifactStagingDirectory)/frontend"
+      displayName: Build Blazor Front-end
+      workingDirectory: $(System.DefaultWorkingDirectory)/Client
+
+    - script: dotnet publish -c Release -o "$(Build.ArtifactStagingDirectory)/api"
+      displayName: Build Azure Functions API
+      workingDirectory: $(System.DefaultWorkingDirectory)/Api
+
+    - task: PublishBuildArtifacts@1
+      displayName: Publish artifacts
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: drop
+        publishLocation: Container
+
+- stage: deploy_staging
+  displayName: Deploy to staging
+  jobs:
+  - deployment: deploy
+    displayName: Deploy to Staging
+    environment: staging
+    pool:
+      vmImage: ubuntu-latest
+
+    variables:
+    - group: Azure-Static-Web-Apps-white-island-00398e910-variable-group
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadBuildArtifacts@1
+            displayName: Download Artifacts
+            inputs:
+              buildType: current
+              downloadType: single
+              artifactName: drop
+              downloadPath: $(System.ArtifactsDirectory)
+
+          - task: AzureStaticWebApp@0
+            displayName: Deploy SWA (Staging)
+            inputs:
+              app_location: frontend/wwwroot
+              api_location: api
+              skip_app_build: true
+              skip_api_build: true
+              verbose: true
+              azure_static_web_apps_api_token: $(deployment_token)
+              workingDirectory: $(System.ArtifactsDirectory)/drop
+
+          - task: AzureCLI@2
+            displayName: Set TABLE_CONN for Staging
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az extension add --name staticwebapp --yes --only-show-errors
+                az staticwebapp appsettings set \
+                  --name $(staticWebAppName) \
+                  --resource-group $(resourceGroup) \
+                  --setting-names TABLE_CONN=${TABLE_CONN} \
+                  --environment staging
+            env:
+              TABLE_CONN: $(TABLE_CONN)
+
+- stage: deploy_production
+  displayName: Deploy to production
+  jobs:
+  - deployment: deploy
+    displayName: Deploy
+    environment: Production
+    pool:
+      vmImage: ubuntu-latest
+
+    variables:
+    - group: Azure-Static-Web-Apps-white-island-00398e910-variable-group
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: none
+          - checkout: none
+
+          - task: DownloadBuildArtifacts@1
+            displayName: Download Artifacts
+            inputs:
+              buildType: current
+              downloadType: single
+              artifactName: drop
+              downloadPath: $(System.ArtifactsDirectory)
+
+          - task: AzureStaticWebApp@0
+            displayName: Deploy SWA (Production)
+            inputs:
+              app_location: frontend/wwwroot
+              api_location: api
+              skip_app_build: true
+              skip_api_build: true
+              verbose: true
+              azure_static_web_apps_api_token: $(deployment_token)
+              workingDirectory: $(System.ArtifactsDirectory)/drop
+
+          - task: AzureCLI@2
+            displayName: Set TABLE_CONN for Production
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az extension add --name staticwebapp --yes --only-show-errors
+                az staticwebapp appsettings set \
+                  --name $(staticWebAppName) \
+                  --resource-group $(resourceGroup) \
+                  --setting-names TABLE_CONN=${TABLE_CONN}
+            env:
+              TABLE_CONN: $(TABLE_CONN)
