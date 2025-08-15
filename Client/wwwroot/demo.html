@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Donate to the ASPCA — Help Animals Today</title>
+  <meta name="description" content="Make a lifesaving gift to help animals. Secure single-page donation experience inspired by ASPCA’s marketing style." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            aspca: {
+              orange: '#F75F00', // Based on public brand references
+              gray: '#6B7280',
+              dark: '#111827'
+            }
+          },
+          boxShadow: {
+            soft: '0 10px 30px rgba(0,0,0,0.08)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --aspca-orange: #F75F00;
+    }
+    html, body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; }
+    .card { box-shadow: 0 20px 40px rgba(0,0,0,.08); }
+    .cc-brand { background: #f3f4f6; border-radius: .5rem; padding: .25rem .5rem; font-weight: 600; font-size: .75rem; }
+    .visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+    .hero-overlay { background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.45)); }
+    .required:after { content: ' *'; color: var(--aspca-orange); }
+  </style>
+  <!-- Alpine.js for light interactivity -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- Cleave.js for input masking (credit card, expiry, phone) -->
+  <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <!-- Header -->
+  <header class="bg-white/90 backdrop-blur sticky top-0 z-40 border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="#" class="flex items-center gap-3" aria-label="ASPCA">
+          <img
+        src="https://source.unsplash.com/1600x900/?rescue,dog"
+        alt="Rescue dog looking up with hope"
+        class="h-[70vh] w-full object-cover" />
+      <div class="hero-overlay absolute inset-0"></div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 py-16 lg:py-20 items-end">
+        <div class="text-white">
+          <p class="uppercase tracking-widest text-sm/6 font-semibold text-white/80">You can help save animals today</p>
+          <h1 class="mt-2 text-4xl sm:text-5xl font-extrabold">Make a Lifesaving Gift</h1>
+          <p class="mt-4 max-w-xl text-white/90 text-lg">Every dollar can make a difference for an animal in need. Join us by making a gift today.</p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <a href="#form" class="inline-flex items-center rounded-xl bg-[--aspca-orange] px-5 py-3 text-white font-semibold shadow hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--aspca-orange]">Donate Now</a>
+            <a href="#impact" class="inline-flex items-center rounded-xl bg-white/10 px-5 py-3 text-white font-semibold ring-1 ring-white/40 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white">See Impact</a>
+          </div>
+        </div>
+        <div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Donation Form -->
+  <main id="form" class="relative -mt-24 pb-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <section class="lg:col-span-3">
+          <form id="donation-form" class="card bg-white rounded-2xl p-6 sm:p-8" novalidate x-data="donationForm()">
+            <h2 class="text-2xl font-bold">Donate</h2>
+            <p class="text-gray-600 mt-1">Your tax-deductible gift helps rescue, protect, and care for animals in need.</p>
+
+            <!-- Frequency Toggle -->
+            <fieldset class="mt-6">
+              <legend class="sr-only">Donation frequency</legend>
+              <div class="inline-flex rounded-xl ring-1 ring-gray-300 bg-gray-100 p-1" role="tablist" aria-label="Donation frequency">
+                <button type="button" role="tab" aria-selected="true" :aria-selected="frequency==='monthly'" @click="frequency='monthly'" class="px-4 py-2 text-sm font-semibold rounded-lg" :class="frequency==='monthly' ? 'bg-white shadow' : 'text-gray-600'">Monthly</button>
+                <button type="button" role="tab" :aria-selected="frequency==='once'" @click="frequency='once'" class="px-4 py-2 text-sm font-semibold rounded-lg" :class="frequency==='once' ? 'bg-white shadow' : 'text-gray-600'">One‑Time</button>
+              </div>
+            </fieldset>
+
+            <!-- Amounts -->
+            <fieldset class="mt-6">
+              <legend class="text-sm font-semibold text-gray-900">Gift Amount</legend>
+              <div class="mt-3 grid grid-cols-3 sm:grid-cols-6 gap-3">
+                <template x-for="a in suggestedAmounts[frequency]" :key="a">
+                  <button type="button" @click="amount=a" :class="amount===a?'bg-[--aspca-orange] text-white':'bg-white ring-1 ring-gray-300 text-gray-900'" class="rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-[--aspca-orange]" x-text="'$'+a"></button>
+                </template>
+                <div class="col-span-3 sm:col-span-2">
+                  <label for="otherAmount" class="sr-only">Other amount</label>
+                  <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                    <input id="otherAmount" inputmode="decimal" pattern="^\\d+(?:\\.\\d{1,2})?$" x-model.number="amount" placeholder="Other" class="w-full rounded-xl border-gray-300 pl-7 pr-3 py-2 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" />
+                  </div>
+                  <p class="mt-1 text-xs text-gray-500">Minimum $5</p>
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Donor Info -->
+            <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="firstName" class="required block text-sm font-medium">First Name</label>
+                <input id="firstName" name="firstName" autocomplete="given-name" required class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" />
+              </div>
+              <div>
+                <label for="lastName" class="required block text-sm font-medium">Last Name</label>
+                <input id="lastName" name="lastName" autocomplete="family-name" required class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" />
+              </div>
+              <div class="sm:col-span-2">
+                <label for="email" class="required block text-sm font-medium">Email</label>
+                <input id="email" type="email" name="email" autocomplete="email" required class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" />
+              </div>
+              <div class="sm:col-span-2">
+                <label for="phone" class="required block text-sm font-medium">Phone</label>
+                <input id="phone" name="phone" inputmode="tel" required class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" placeholder="(555) 555‑5555" />
+              </div>
+
+              <div class="sm:col-span-2">
+                <label for="address1" class="required block text-sm font-medium">Street Address</label>
+                <input id="address1" name="address1" autocomplete="address-line1" required class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" />
+              </div>
+              <div>
+                <label for="address2" class="block text-sm font-medium">Apt / Unit (optional)</label>
+                <input id="address2" name="address2" autocomplete="address-line2" class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" />
+              </div>
+              <div>
+                <label for="city" class="required block text-sm font-medium">City</label>
+                <input id="city" name="city" autocomplete="address-level2" required class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" />
+              </div>
+              <div>
+                <label for="state" class="required block text-sm font-medium">State</label>
+                <select id="state" name="state" autocomplete="address-level1" required class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]">
+                  <option value="">Select…</option>
+                  <option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option><option>CO</option><option>CT</option><option>DE</option><option>DC</option><option>FL</option><option>GA</option><option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option><option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option><option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option><option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option><option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option><option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option><option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option><option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option>
+                </select>
+              </div>
+              <div>
+                <label for="zip" class="required block text-sm font-medium">ZIP</label>
+                <input id="zip" name="zip" inputmode="numeric" pattern="^\d{5}(-\d{4})?$" required class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" placeholder="12345" />
+              </div>
+            </div>
+
+            <!-- Payment -->
+            <div class="mt-10">
+              <h3 class="text-xl font-bold">Payment Details</h3>
+              <p class="text-sm text-gray-600">This demo collects credit card info fields only. In production, integrate a PCI‑compliant processor (e.g., tokenization via Stripe, Braintree, etc.).</p>
+
+              <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="sm:col-span-2">
+                  <label for="cardName" class="required block text-sm font-medium">Name on Card</label>
+                  <input id="cardName" name="cardName" autocomplete="cc-name" required class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" />
+                </div>
+                <div class="sm:col-span-2">
+                  <label for="cardNumber" class="required block text-sm font-medium">Card Number</label>
+                  <div class="relative">
+                    <input id="cardNumber" name="cardNumber" inputmode="numeric" autocomplete="cc-number" required class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 pr-24 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" placeholder="4242 4242 4242 4242" />
+                    <div id="ccBrand" class="absolute right-2 top-1/2 -translate-y-1/2 cc-brand text-gray-700">••••</div>
+                  </div>
+                </div>
+                <div>
+                  <label for="exp" class="required block text-sm font-medium">Expiry</label>
+                  <input id="exp" name="exp" inputmode="numeric" autocomplete="cc-exp" required class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" placeholder="MM/YY" />
+                </div>
+                <div>
+                  <label for="cvc" class="required block text-sm font-medium">CVC</label>
+                  <input id="cvc" name="cvc" inputmode="numeric" autocomplete="cc-csc" required class="mt-1 w-full rounded-xl border-gray-300 py-2 px-3 focus:ring-[--aspca-orange] focus:border-[--aspca-orange]" placeholder="123" />
+                </div>
+              </div>
+
+              <div class="mt-6 flex items-start gap-3">
+                <input id="agree" type="checkbox" required class="mt-1 h-4 w-4 rounded border-gray-300 text-[--aspca-orange] focus:ring-[--aspca-orange]" />
+                <label for="agree" class="text-sm text-gray-700">I understand this is a demo form and consent to the processing of my information in accordance with the <a href="#" class="underline decoration-2 decoration-[--aspca-orange] underline-offset-2">Privacy Policy</a>.</label>
+              </div>
+
+              <button type="submit" class="mt-6 w-full items-center justify-center rounded-xl bg-[--aspca-orange] px-4 py-3 text-white font-semibold shadow hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--aspca-orange]">
+                Complete Donation
+              </button>
+              <p class="mt-2 text-center text-xs text-gray-500">Secure • Encrypted • Tax‑deductible 501(c)(3)</p>
+              
+              <!-- Honeypot field -->
+              <input type="text" name="website" id="website" class="visually-hidden" tabindex="-1" autocomplete="off" />
+            </div>
+          </form>
+        </section>
+
+        <!-- Sidebar: Impact & Trust -->
+        <aside class="lg:col-span-2 space-y-8">
+          <div class="card bg-white rounded-2xl p-6">
+            <h3 class="text-xl font-bold">Your Impact</h3>
+            <p class="mt-2 text-gray-600">Your gift supports animal rescue, protection and placement across the U.S. — helping provide medical care, shelter, and advocacy.</p>
+            <ul class="mt-4 space-y-3 text-gray-700">
+              <li class="flex gap-3"><span class="mt-1 h-2.5 w-2.5 rounded-full bg-[--aspca-orange]"></span> Emergency rescues & cruelty investigations</li>
+              <li class="flex gap-3"><span class="mt-1 h-2.5 w-2.5 rounded-full bg-[--aspca-orange]"></span> Shelter & foster supplies for animals in recovery</li>
+              <li class="flex gap-3"><span class="mt-1 h-2.5 w-2.5 rounded-full bg-[--aspca-orange]"></span> Behavioral rehabilitation & placement support</li>
+            </ul>
+          </div>
+          <div class="card bg-white rounded-2xl p-6 overflow-hidden">
+            <img class="h-44 w-full object-cover rounded-xl" src="https://source.unsplash.com/1200x800/?kitten,shelter" alt="Shelter kitten behind safe hands" />
+            <div class="mt-4">
+              <p class="text-sm text-gray-700">“Because of supporters like you, frightened animals get the second chance they deserve.”</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="card bg-white rounded-2xl p-4 flex items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-[--aspca-orange]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10.012 10.012 0 0 0 12 2Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"/></svg>
+              <div>
+                <p class="font-semibold">Secure & Encrypted</p>
+                <p class="text-xs text-gray-600">Best‑practice front‑end; plug in your PCI‑compliant processor.</p>
+              </div>
+            </div>
+            <div class="card bg-white rounded-2xl p-4 flex items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-[--aspca-orange]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.401 8.165L12 18.896l-7.335 3.866 1.401-8.165L.132 9.21l8.2-1.192z"/></svg>
+              <div>
+                <p class="font-semibold">Trusted Organization</p>
+                <p class="text-xs text-gray-600">ASPCA is a 501(c)(3) nonprofit empowering animal welfare nationwide.</p>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Impact band -->
+  <section id="impact" class="bg-white border-y border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <p class="text-3xl font-extrabold">150+ years</p>
+          <p class="text-gray-600">Working to end animal abuse and neglect.</p>
+        </div>
+        <div>
+          <p class="text-3xl font-extrabold">Nationwide</p>
+          <p class="text-gray-600">Rescue, protection & placement work across the U.S.</p>
+        </div>
+        <div>
+          <p class="text-3xl font-extrabold">Monthly Guardians</p>
+          <p class="text-gray-600">An easy, efficient way to make a difference all year long.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <h2 class="text-2xl font-bold">Frequently Asked Questions</h2>
+      <div class="mt-6 space-y-6">
+        <details class="group bg-white rounded-2xl p-5 shadow-sm">
+          <summary class="cursor-pointer font-semibold marker:text-[--aspca-orange]">Is my donation tax‑deductible?</summary>
+          <p class="mt-2 text-gray-700">Yes. The ASPCA is a 501(c)(3) not‑for‑profit organization. Please retain your email receipt for your records.</p>
+        </details>
+        <details class="group bg-white rounded-2xl p-5 shadow-sm">
+          <summary class="cursor-pointer font-semibold">Can I give monthly instead of one‑time?</summary>
+          <p class="mt-2 text-gray-700">Absolutely. Use the Monthly/One‑Time toggle above to select your preference. Monthly giving is one of the most efficient ways to help animals year‑round.</p>
+        </details>
+        <details class="group bg-white rounded-2xl p-5 shadow-sm">
+          <summary class="cursor-pointer font-semibold">How will my gift be used?</summary>
+          <p class="mt-2 text-gray-700">Gifts support rescues, medical care, behavioral rehabilitation, placement, and advocacy to improve laws for animals.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <img alt="ASPCA logo" class="h-7 w-auto" src="https://images.seeklogo.com/logo-png/31/1/aspca-logo-png_seeklogo-319102.png" />
+          <p class="text-sm text-gray-600">© <span id="year"></span> American Society for the Prevention of Cruelty to Animals. All rights reserved.</p>
+        </div>
+        <p class="text-xs text-gray-500">Images via Unsplash. This is a demonstration landing page.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JS: Alpine component & validation -->
+  <script>
+    function donationForm() {
+      return {
+        frequency: 'monthly',
+        suggestedAmounts: {
+          monthly: [19, 25, 35, 50, 75, 100],
+          once: [25, 50, 100, 250, 500, 1000]
+        },
+        amount: 25,
+        async submit(event) {
+          event.preventDefault();
+        }
+      }
+    }
+
+    // Initialize masks
+    const phone = new Cleave('#phone', { phone: true, phoneRegionCode: 'US' });
+    const cc = new Cleave('#cardNumber', {
+      creditCard: true,
+      onCreditCardTypeChanged: function (type) {
+        const brand = document.getElementById('ccBrand');
+        const map = { visa: 'VISA', mastercard: 'MC', amex: 'AMEX', diners: 'DINERS', discover: 'DISCOVER', jcb: 'JCB', unknown: 'CARD' };
+        brand.textContent = (map[type] || 'CARD');
+      }
+    });
+    const exp = new Cleave('#exp', { date: true, datePattern: ['m', 'y'] });
+    const cvc = new Cleave('#cvc', { numeral: true, numeralIntegerScale: 4, numeralDecimalScale: 0 });
+
+    // Basic client-side validation and fake submit
+    document.getElementById('donation-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const required = form.querySelectorAll('[required]');
+      let valid = true;
+      required.forEach(el => {
+        if (!el.value || (el.type === 'checkbox' && !el.checked)) {
+          el.classList.add('ring-2','ring-red-400');
+          el.setAttribute('aria-invalid', 'true');
+          valid = false;
+        } else {
+          el.classList.remove('ring-2','ring-red-400');
+          el.removeAttribute('aria-invalid');
+        }
+      });
+      if (!valid) {
+        alert('Please complete the required fields.');
+        return;
+      }
+      // Honeypot check
+      if (document.getElementById('website').value) return;
+
+      // In production: send to your backend that creates a payment intent / tokenizes card data.
+      // Example placeholder payload (never log real card data in production):
+      const payload = {
+        frequency: document.querySelector('[role=tab][aria-selected="true"]')?.textContent?.trim().toLowerCase(),
+        amount: document.querySelector('#otherAmount').value || document.querySelector('button.bg-\\[--aspca-orange\\]')?.textContent?.replace('$',''),
+        donor: {
+          firstName: document.getElementById('firstName').value,
+          lastName: document.getElementById('lastName').value,
+          email: document.getElementById('email').value,
+          phone: document.getElementById('phone').value,
+          address1: document.getElementById('address1').value,
+          address2: document.getElementById('address2').value,
+          city: document.getElementById('city').value,
+          state: document.getElementById('state').value,
+          zip: document.getElementById('zip').value
+        }
+      };
+      console.log('Mock submit', payload);
+      alert('Thank you! This demo would now create a secure payment token and finalize your donation.');
+      form.reset();
+    });
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
