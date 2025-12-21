@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DOGE Assessment - Mickey's Website</title>
+    <base href="/" />
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <style>
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+        }
+        .sortable-header:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <div class="sidebar">
+            <nav id="nav-menu">
+                <div class="top-row ps-3 navbar navbar-dark">
+                    <div class="container-fluid">
+                        <a class="navbar-brand" href="index.html">My Apps</a>
+                        <button title="Navigation menu" class="navbar-toggler" onclick="toggleNavMenu()">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nav-scrollable" id="navMenu">
+                    <nav class="flex-column">
+                        <div class="nav-item px-3">
+                            <a class="nav-link" href="index.html">
+                                <span class="oi oi-home" aria-hidden="true"></span> Home
+                            </a>
+                        </div>
+
+                        <div class="nav-item px-3">
+                            <a class="nav-link" href="resume.html">
+                                <span class="oi oi-document" aria-hidden="true"></span> Résumé
+                            </a>
+                        </div>
+
+                        <div class="nav-item px-3">
+                            <a class="nav-link active" href="doge.html">
+                                <span class="oi oi-puzzle-piece" aria-hidden="true"></span> DOGE Assessment
+                            </a>
+                        </div>
+                    </nav>
+                </div>
+            </nav>
+        </div>
+
+        <main>
+            <article class="content px-4">
+                <h1>DOGE Assessment</h1>
+                <hr />
+                <h2>Agency Regulation Sizes</h2>
+
+                <input id="searchInput" class="form-control mb-2" placeholder="Filter agencies..." />
+
+                <div id="loading" style="display: none;">
+                    <p><em>Loading…</em></p>
+                </div>
+
+                <table class="table table-striped table-hover" id="agencyTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th class="sortable-header" onclick="sortBy('AgencyName')">
+                                Agency <span id="sort-AgencyName"></span>
+                            </th>
+                            <th class="sortable-header" onclick="sortBy('RegulationSizeMb')">
+                                Size&nbsp;(MB) <span id="sort-RegulationSizeMb"></span>
+                            </th>
+                            <th class="sortable-header" onclick="sortBy('LastUpdated')">
+                                Last&nbsp;Updated <span id="sort-LastUpdated"></span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="agencyTableBody">
+                    </tbody>
+                </table>
+            </article>
+        </main>
+    </div>
+
+    <script>
+        let agencies = [];
+        let sortColumn = 'AgencyName';
+        let sortAsc = true;
+
+        function toggleNavMenu() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('collapse');
+        }
+
+        async function loadAgencies() {
+            const loading = document.getElementById('loading');
+            const table = document.getElementById('agencyTable');
+            
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/agencies');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                agencies = await response.json();
+                loading.style.display = 'none';
+                table.style.display = 'table';
+                renderTable();
+            } catch (error) {
+                loading.style.display = 'block';
+                loading.innerHTML = '<p class="text-danger"><em>Error loading data: ' + error.message + '</em></p>';
+            }
+        }
+
+        function filterAndSort() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filtered = agencies;
+            if (search) {
+                filtered = agencies.filter(a => 
+                    a.agencyName.toLowerCase().includes(search)
+                );
+            }
+
+            let sorted = [...filtered];
+            switch (sortColumn) {
+                case 'RegulationSizeMb':
+                    sorted.sort((a, b) => sortAsc ? 
+                        a.regulationSizeMb - b.regulationSizeMb : 
+                        b.regulationSizeMb - a.regulationSizeMb
+                    );
+                    break;
+                case 'LastUpdated':
+                    sorted.sort((a, b) => {
+                        const dateA = new Date(a.lastUpdated);
+                        const dateB = new Date(b.lastUpdated);
+                        return sortAsc ? dateA - dateB : dateB - dateA;
+                    });
+                    break;
+                default: // AgencyName
+                    sorted.sort((a, b) => sortAsc ? 
+                        a.agencyName.localeCompare(b.agencyName) : 
+                        b.agencyName.localeCompare(a.agencyName)
+                    );
+            }
+
+            return sorted;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('agencyTableBody');
+            const filtered = filterAndSort();
+            
+            tbody.innerHTML = '';
+            
+            filtered.forEach(agency => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = agency.agencyName;
+                row.insertCell(1).textContent = agency.regulationSizeMb.toFixed(2) + ' MB';
+                
+                const lastUpdated = new Date(agency.lastUpdated);
+                row.insertCell(2).textContent = lastUpdated.toLocaleDateString();
+            });
+
+            updateSortIndicators();
+        }
+
+        function updateSortIndicators() {
+            // Clear all indicators
+            document.getElementById('sort-AgencyName').textContent = '';
+            document.getElementById('sort-RegulationSizeMb').textContent = '';
+            document.getElementById('sort-LastUpdated').textContent = '';
+            
+            // Set current indicator
+            const indicator = sortAsc ? '▲' : '▼';
+            document.getElementById('sort-' + sortColumn).textContent = indicator;
+        }
+
+        function sortBy(column) {
+            if (sortColumn === column) {
+                sortAsc = !sortAsc;
+            } else {
+                sortColumn = column;
+                sortAsc = true;
+            }
+            renderTable();
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', renderTable);
+
+        // Load data on page load
+        loadAgencies();
+    </script>
+</body>
+
+</html>
