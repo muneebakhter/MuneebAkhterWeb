@@ -31,9 +31,12 @@ stages:
         version: 9.0.x
         includePreviewVersions: true
 
-    - script: dotnet publish -c Release -o "$(Build.ArtifactStagingDirectory)/frontend"
-      displayName: Build Blazor Front-end
-      workingDirectory: $(System.DefaultWorkingDirectory)/Client
+    - task: CopyFiles@2
+      displayName: Copy static HTML files
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)/Client/wwwroot'
+        Contents: '**'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/frontend/wwwroot'
 
     - script: dotnet publish -c Release -o "$(Build.ArtifactStagingDirectory)/api"
       displayName: Build Azure Functions API
