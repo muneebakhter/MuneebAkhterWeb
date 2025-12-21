@@ -108,11 +108,15 @@
             
             try {
                 const response = await fetch('/api/agencies');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 agencies = await response.json();
                 loading.style.display = 'none';
                 table.style.display = 'table';
                 renderTable();
             } catch (error) {
+                loading.style.display = 'block';
                 loading.innerHTML = '<p class="text-danger"><em>Error loading data: ' + error.message + '</em></p>';
             }
         }
