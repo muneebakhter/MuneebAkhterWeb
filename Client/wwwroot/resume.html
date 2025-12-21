@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Resume - Mickey's Website</title>
+    <base href="/" />
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+</head>
+
+<body>
+    <div class="page">
+        <div class="sidebar">
+            <nav id="nav-menu">
+                <div class="top-row ps-3 navbar navbar-dark">
+                    <div class="container-fluid">
+                        <a class="navbar-brand" href="index.html">My Apps</a>
+                        <button title="Navigation menu" class="navbar-toggler" onclick="toggleNavMenu()">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nav-scrollable" id="navMenu">
+                    <nav class="flex-column">
+                        <div class="nav-item px-3">
+                            <a class="nav-link" href="index.html">
+                                <span class="oi oi-home" aria-hidden="true"></span> Home
+                            </a>
+                        </div>
+
+                        <div class="nav-item px-3">
+                            <a class="nav-link active" href="resume.html">
+                                <span class="oi oi-document" aria-hidden="true"></span> Résumé
+                            </a>
+                        </div>
+
+                        <div class="nav-item px-3">
+                            <a class="nav-link" href="doge.html">
+                                <span class="oi oi-puzzle-piece" aria-hidden="true"></span> DOGE Assessment
+                            </a>
+                        </div>
+                    </nav>
+                </div>
+            </nav>
+        </div>
+
+        <main>
+            <article class="content px-4">
+                <h1>My Resume</h1>
+
+                <object data="MickeyAkhterResume.pdf" type="application/pdf" style="width: 100%; height: 600px;">
+                    <p>
+                        It appears your browser doesn't support embedded PDFs.
+                        <a href="MickeyAkhterResume.pdf">Download the file here</a>.
+                    </p>
+                </object>
+            </article>
+        </main>
+    </div>
+
+    <script>
+        function toggleNavMenu() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('collapse');
+        }
+    </script>
+</body>
+
+</html>
